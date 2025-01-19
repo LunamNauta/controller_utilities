@@ -13,29 +13,39 @@
 #include <ncurses.h>
 
 int main(){
+    // Detect all currently connected controllers
     Input::Xbox::detect_controllers();
     if (!Input::Xbox::detected_controllers_count()) throw std::runtime_error("Error: Failed to find Xbox controller");
-    Input::Xbox::Controller controller = Input::Xbox::get_controller();
-    controller.set_deadzone(4000);
-    controller.enable_polling();
+    
+    Input::Xbox::Controller controller = Input::Xbox::get_controller(); // Get the first controller that was found
+    controller.set_deadzone(4000); // Set the deadzone. Joystick values less than this will be read as 0. The max value is SHRT_MAX and the min is SHRT_MIN
+    controller.enable_polling();   // Enable polling of this device. Without this, the controller state will not update
 
+    // On all the Xbox controllers tested, joystick max has been SHRT_MAX and the SHRT_MIN (joystick position is defined by 'short's)
+    // Likewise, trigger max values have always been (2^10)-1
     float joystick_max = std::numeric_limits<short>::max() - controller.get_deadzone();
     float trigger_max = 1023;
 
+    // Ncurses setup. None of this is required to use this library. It just looks nice
     initscr();
     cbreak();
     noecho();
     curs_set(0);
     keypad(stdscr, true);
 
+    // Data for a little ball you can move around the console
     float ball_position[2]{20.0f, 20.0f};
     float ball_speed = 10.0f;
 
     while (true){
-        std::this_thread::sleep_for(std::chrono::milliseconds(16)); // Approximate 60 fps. Doesn't have to be accurate
+        // Simulate approximately 60 fps. Doesn't have to be accurate
+        std::this_thread::sleep_for(std::chrono::milliseconds(16));
         float delta_time = 16.0f/1000.0f;
 
+        // Get the state of the controller
         Input::Xbox::Controller_State state = controller.get_state();
+
+        // Scale the joystick values to be between -1.0f and 1.0f
         float right_joystick_x = (float)state.rj_x / joystick_max;
         float right_joystick_y = (float)state.rj_y / joystick_max;
         float left_joystick_x = (float)state.lj_x / joystick_max;
@@ -43,11 +53,13 @@ int main(){
         float right_trigger = (float)state.rt / trigger_max;
         float left_trigger = (float)state.lt / trigger_max;
 
+        // Because SHRT_MAX != -SHRT_MIN, the values need to be capped again. I'm too lazy to make this work better.
         if (right_joystick_x < -1) right_joystick_x = -1;
         if (right_joystick_y < -1) right_joystick_y = -1;
         if (left_joystick_x < -1) left_joystick_x = -1;
         if (left_joystick_y < -1) left_joystick_y = -1;
-
+    
+        // Output the controller state to the console
         clear();
         mvprintw(0, 0, "Right Joystick:");
         mvprintw(0, 17 - (right_joystick_x < 0), "%.7f,", right_joystick_x);
@@ -67,7 +79,8 @@ int main(){
         else if (state.dl) mvprintw(9, 0, "Dpad: Left");
         else if (state.dr) mvprintw(9, 0, "Dpad: Right");
         else mvprintw(9, 0, "Dpad: None");
-
+    
+        // Output the little ball
         ball_position[0] += left_joystick_y * ball_speed * delta_time;
         ball_position[1] += left_joystick_x * ball_speed * delta_time;
         mvprintw(ball_position[1], ball_position[0], "#");
