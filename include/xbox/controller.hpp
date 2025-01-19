@@ -62,10 +62,8 @@ public:
 };
 
 void detect_controllers();
-Controller get_controller(std::size_t i = 0);
 std::size_t detected_controllers_count();
-void set_auto_update(Controller controller);
-std::size_t auto_updated_controllers_count();
+Controller get_controller(std::size_t i = 0);
 
 }}
 
