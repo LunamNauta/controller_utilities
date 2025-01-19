@@ -13,7 +13,7 @@
 #include <ncurses.h>
 
 /*
- * NOTE: Joystick values retrieved with rj_x, rj_y, lj_x, and lj_y are not normalized
+ * NOTE: Joystick values retrieved with rj_x, rj_y, lj_x, and lj_y are not normalized (direction wise)
  * They are the raw values from the controller, scaled to between -1.0f and 1.0f
  * You cannot assume that the magnitude of the direction vector is equal to 1.0f
 */
@@ -26,7 +26,7 @@ int main(){
     // Get the first controller that was found
     Input::Xbox::Controller controller = Input::Xbox::get_controller();
     
-    controller.set_deadzone(0.25f); // Set the deadzone (as a percent to the edge). Movement less than this will return 0.0f when asked their position
+    controller.set_deadzone(0.25f); // Set the deadzone (as a percent to the edge). Movement less than this will return 0.0f when retrieving joystick direction
     controller.enable_polling();    // Enable automatic polling of the device state
     controller.set_rumble(0.2f);    // Set the rumble (as a percent). 1.0f will give the max rumble. Less than 0.2f may not cause any rumble at all
     
@@ -49,7 +49,7 @@ int main(){
         std::this_thread::sleep_for(std::chrono::milliseconds(16));
         float delta_time = 16.0f/1000.0f;
 
-        // CLeaer screen
+        // Clear screen
         clear();
         
         // If the 'a' button was pressed, rumble the controller
