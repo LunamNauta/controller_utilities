@@ -33,6 +33,6 @@ the event codes sent by the Linux kernel
 
 The 'detect_controllers' function should also be reworked. When it is called, all controllers should be forgotten,
 and then the list should be updated. In order to do this, the polling thread needs to be locked. If a controller
-that was previously found is not found, it shoudl remain out of the list, and its descriptor should be closed 
+that was previously found is not found, it should remain out of the list, and its descriptor should be closed 
 (note, this is not the same thing as detecting a disconnect)
 
