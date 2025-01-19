@@ -153,6 +153,10 @@ void Controller::disable_polling() const{
     if (auto_updated_controllers.find(handle) == auto_updated_controllers.end()) return;
     close(auto_updated_controllers[handle].fd);
     auto_updated_controllers.erase(handle);
+    if (setup_polling_thread && !auto_updated_controllers.size()){
+        kill_polling_thread = true;
+        setup_polling_thread = false;
+    }
 }
 void disable_polling_all(){
     kill_polling_thread = true;
