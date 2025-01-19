@@ -15,8 +15,11 @@ own codes. Having a massive switch statement like that is simply not efficient. 
 Something else that should be added is the ability to cause the controller to rumble.
 This is a simple operation, and can be done by writing data to a handler file.  
   
-A generalization of the entire system would probably also be a good idea. Currently, the API
+A generalization of the entire system would probably also be a good idea. Currently, the library
 is set up so that if you wanted to add something like a PlayStation controller, you'd need
 an entirely separate namespace. This is pointless since much of the logic is identical. Mostly,
 the difference is in magic numbers. This is an easy fix, and mostly just requires moving some structures
 around to different files.
+
+One major thing that I haven't addressed is detecting if the controller has been disconnected / the file descriptor is no longer valid. 
+Right now, if you disconnect the controller, the library stills tries to read the stream, and never closes the event file.
