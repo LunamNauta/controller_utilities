@@ -1,4 +1,4 @@
-#include "xbox/controller.hpp"
+#include "controller_utilities/xbox/controller.hpp"
 
 #include <stdexcept>
 #include <cstring>
@@ -15,8 +15,7 @@
 /*
  * NOTE: Joystick values retrieved with rj_x, rj_y, lj_x, and lj_y are not normalized
  * They are the raw values from the controller, scaled to between -1.0f and 1.0f
- * You cannot assume that the magnitude of the direction vector is equal to 1.0f,
- * Only that each component's magnitude is at most 1.0f
+ * You cannot assume that the magnitude of the direction vector is equal to 1.0f
 */
 
 int main(){
@@ -25,6 +24,11 @@ int main(){
     Input::Xbox::Controller controller = Input::Xbox::get_controller();
     controller.set_deadzone(4000);
     controller.enable_polling();
+    controller.set_rumble(0.2f);
+    bool pressed_a = false;
+
+    float ball_position[2]{20.0f, 20.0f};
+    float ball_speed = 10.0f;
  
     initscr();
     cbreak();
@@ -32,14 +36,16 @@ int main(){
     curs_set(0);
     keypad(stdscr, true);
 
-    float ball_position[2]{20.0f, 20.0f};
-    float ball_speed = 10.0f;
-
     while (true){
         std::this_thread::sleep_for(std::chrono::milliseconds(16));
         float delta_time = 16.0f/1000.0f;
 
         clear();
+        if (!pressed_a && controller.a()){
+            pressed_a = true;
+            controller.rumble(5);
+        } else if (!controller.a()) pressed_a = false;
+
         mvprintw(0, 0, "Right Joystick:");
         mvprintw(0, 17 - (controller.rj_x() < 0), "%.7f,", controller.rj_x());
         mvprintw(0, 29 - (controller.rj_y() < 0), "%.7f", controller.rj_y());

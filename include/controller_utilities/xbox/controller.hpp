@@ -1,7 +1,7 @@
 #ifndef XBOX_CONTROLLER_HEADER
 #define XBOX_CONTROLLER_HEADER
 
-#include "xbox/constants.hpp"
+#include "controller_utilities/xbox/constants.hpp"
 
 #include <string>
 #include <memory>
@@ -10,6 +10,8 @@
 namespace Input{
 namespace Xbox{
 
+// TODO: input_event actually returns a signed 32-bit integer for the value, not a short
+// Rewrite to reflect this? Xbox controller only uses signed 16-bit integer
 struct Controller_State{
     short lj_x;    // Left joystick (X-Axis)
     short lj_y;    // Left joystick (Y-Axis)
@@ -42,7 +44,10 @@ struct Controller_Handle{
     Controller_State state;
     ConsoleType console_type;
     ControllerType controller_type;
+
     short deadzone;
+    short rumble_id;
+    float rumble_strength;
 
     Controller_Handle();
 };
@@ -51,6 +56,8 @@ class Controller{
 private:
     std::shared_ptr<Controller_Handle> handle;
 
+    void init_rumble();
+
 public:
     Controller();
 
@@ -58,7 +65,7 @@ public:
     void set_deadzone(short di);
     short get_deadzone() const;
 
-    void enable_polling() const;
+    void enable_polling();
     void disable_polling() const;
 
     float rj_x() const;
@@ -80,6 +87,9 @@ public:
     bool x() const;
     bool y() const;
 
+    void rumble(int32_t count) const;
+    void set_rumble(float strength);
+
     friend void detect_controllers();
     friend Controller get_controller(std::size_t i);
 };
@@ -87,6 +97,7 @@ public:
 void detect_controllers();
 std::size_t detected_controllers_count();
 Controller get_controller(std::size_t i = 0);
+void disable_polling_all();
 
 }}
 

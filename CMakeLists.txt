@@ -3,7 +3,7 @@ project(controller_utilities)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-file(GLOB_RECURSE sources src *.cpp)
+file(GLOB_RECURSE sources src/*.cpp)
 
 add_library(controller_utilities SHARED ${sources})
 target_include_directories(controller_utilities PUBLIC include)

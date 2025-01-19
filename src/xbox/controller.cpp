@@ -1,10 +1,11 @@
-#include "xbox/controller.hpp"
-#include "xbox/constants.hpp"
-#include "utilities.hpp"
+#include "controller_utilities/xbox/controller.hpp"
+#include "controller_utilities/xbox/constants.hpp"
+#include "controller_utilities/utilities.hpp"
 
 #include <unordered_set>
 #include <algorithm>
 #include <stdexcept>
+#include <iostream>
 #include <vector>
 #include <memory>
 #include <thread>
@@ -109,7 +110,7 @@ Controller_State::Controller_State() :
     a(0), b(0), x(0), y(0)
 {}
 
-Controller_Handle::Controller_Handle() : deadzone(0){}
+Controller_Handle::Controller_Handle() : deadzone(0), rumble_id(-1), rumble_strength(0.0f){}
 
 Controller::Controller() : handle(nullptr){}
 Controller_State Controller::get_state() const{
@@ -129,14 +130,15 @@ short Controller::get_deadzone() const{
     handle->guard.unlock();
     return dz;
 }
-void Controller::enable_polling() const{
+void Controller::enable_polling(){
     if (auto_updated_controllers.find(handle) != auto_updated_controllers.end()) return;
     std::string handler_location = "/dev/input/" + handle->handler;
     pollfd handler_file;
-    handler_file.fd = open(handler_location.c_str(), O_RDONLY | O_NONBLOCK);
+    handler_file.fd = open(handler_location.c_str(), O_RDWR | O_NONBLOCK); // | O_RDONLY
     handler_file.events = POLLIN;
     if (handler_file.fd < 0) throw std::runtime_error("Error: Unable to open Xbox controller event location");
     auto_updated_controllers[handle] = handler_file;
+    init_rumble();
     if (!setup_polling_thread){
         kill_polling_thread = false;
         polling_thread = std::thread(polling_handler);
@@ -278,11 +280,48 @@ bool Controller::y() const{
     return val;
 }
 
-void disable_polling_all(){
-    kill_polling_thread = true;
-    setup_polling_thread = false;
-    for (const auto& controller_map : auto_updated_controllers) close(controller_map.second.fd);
-    auto_updated_controllers.erase(auto_updated_controllers.begin(), auto_updated_controllers.end());
+void Controller::init_rumble(){set_rumble(0.25f);}
+void Controller::set_rumble(float strength){
+    auto it = auto_updated_controllers.find(handle);
+    if (it == auto_updated_controllers.end()) return;
+    strength = std::min(1.0f, std::abs(strength));
+    ff_effect effect = {
+        FF_RUMBLE,
+        -1, 0,
+        {0, 0},
+        {100, 0},
+        {}
+    };
+    handle->guard.lock();
+    // Create rumble effect
+    effect.u.rumble.strong_magnitude = std::numeric_limits<short>::max() * strength; 
+    effect.u.rumble.weak_magnitude = std::numeric_limits<short>::max() * strength;
+    if (handle->rumble_id != -1) ioctl(it->second.fd, EVIOCRMFF, handle->rumble_id);
+    if (ioctl(it->second.fd, EVIOCSFF, &effect) < 0) return;
+    handle->rumble_id = effect.id;
+    // Set strength of effect. This might do nothing... It seems as though strong and weak magnitude are the way to do this, 
+    // But the documentation for the kernel says this is way to do it. Maybe it works for bluetooth mode?
+    input_event input;
+    input.type = EV_FF;
+    input.code = FF_GAIN;
+    input.value = (float)0xFFFFUL * strength;
+    if (write(it->second.fd, &input, sizeof(input)) < 0) std::cerr << "Warning: Failed to set strength of rumble effect\n";
+    handle->guard.unlock();
+}
+
+void Controller::rumble(int32_t count) const{
+    auto it = auto_updated_controllers.find(handle);
+    if (it == auto_updated_controllers.end()) return;
+    handle->guard.lock();
+    if (handle->rumble_id == -1) std::cerr << "Warning: Controller does not support rumble\n";
+    input_event play_rumble = {
+        {},
+        EV_FF,
+        (uint16_t)handle->rumble_id,
+        count
+    };
+    write(it->second.fd, &play_rumble, sizeof(play_rumble));
+    handle->guard.unlock();
 }
 
 void detect_controllers(){
@@ -310,6 +349,12 @@ Controller get_controller(size_t i){
     Controller controller;
     controller.handle.reset(std::next(known_controllers.begin(), i)->get());
     return controller;
+}
+void disable_polling_all(){
+    kill_polling_thread = true;
+    setup_polling_thread = false;
+    for (const auto& controller_map : auto_updated_controllers) close(controller_map.second.fd);
+    auto_updated_controllers.erase(auto_updated_controllers.begin(), auto_updated_controllers.end());
 }
 
 }}
