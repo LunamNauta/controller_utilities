@@ -30,3 +30,9 @@ from the file after the descriptor is closed but before the function returns
 I also need to find a way to detect if a controller is bluetooth or wired. Currently, I can easily detect what console
 a controller is from. I need to find both the console and if the controller is wired or not, as both of these things change
 the event codes sent by the Linux kernel
+
+The 'detect_controllers' function should also be reworked. When it is called, all controllers should be forgotten,
+and then the list should be updated. In order to do this, the polling thread needs to be locked. If a controller
+that was previously found is not found, it shoudl remain out of the list, and its descriptor should be closed 
+(note, this is not the same thing as detecting a disconnect)
+
