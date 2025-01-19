@@ -8,7 +8,6 @@ Currently, there is only support for wired Xbox controllers. I don't have access
 at this time, and therefore can't test anything else.
 
 ### Things to do
-=======
 - [x] Detection of wired controllers
     - [x] Xbox
     - [ ] Playstation
@@ -32,4 +31,3 @@ at this time, and therefore can't test anything else.
     - [ ] Playstation
 - [ ] Support for controllers that aren't Xbox one
 - [ ] Gernalization that will allow the creation of maps between any controller and the internal ABI
-=======
