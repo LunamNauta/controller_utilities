@@ -23,3 +23,6 @@ around to different files.
 
 One major thing that I haven't addressed is detecting if the controller has been disconnected / the file descriptor is no longer valid. 
 Right now, if you disconnect the controller, the library stills tries to read the stream, and never closes the event file.
+
+Another is that when disabling polling for a controller, I need to mutex guard the file descriptor so that it doesn't try to read
+from the file after the descriptor is closed but before the function returns

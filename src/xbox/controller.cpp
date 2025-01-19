@@ -160,6 +160,7 @@ void Controller::disable_polling() const{
 }
 void disable_polling_all(){
     kill_polling_thread = true;
+    setup_polling_thread = false;
     for (const auto& controller_map : auto_updated_controllers) close(controller_map.second.fd);
     auto_updated_controllers.erase(auto_updated_controllers.begin(), auto_updated_controllers.end());
 }
