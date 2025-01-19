@@ -8,10 +8,10 @@ Currently, there is only support for wired Xbox controllers. I don't have access
 at this time, and therefore can't test anything else.
 
 ### Things to do
-Some functions need to be reworked in order to add support for more controller types. 
-In particular, "update_from_input_event" has to be rewritten. Each console and style of controller has its
-own codes. Having a massive switch statement like that is simply not efficient. A hash map of some kind would be much better.
-  
+Support for more controllers needs to be added. In order to do this, I'd need access to such controllers in order
+to see what it's event codes are. The library has been partially reworked to allow insertion of new controllers by
+simply setting a map between an enum and the code values.
+
 Something else that should be added is the ability to cause the controller to rumble.
 This is a simple operation, and can be done by writing data to a handler file.  
   

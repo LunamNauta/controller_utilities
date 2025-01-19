@@ -1,6 +1,8 @@
 #ifndef XBOX_CONTROLLER_HEADER
 #define XBOX_CONTROLLER_HEADER
 
+#include "xbox/constants.hpp"
+
 #include <string>
 #include <memory>
 #include <mutex>
@@ -38,6 +40,8 @@ struct Controller_Handle{
     std::mutex guard;
     std::string handler;
     Controller_State state;
+    ConsoleType console_type;
+    ControllerType controller_type;
     short deadzone;
 
     Controller_Handle();
@@ -56,6 +60,25 @@ public:
 
     void enable_polling() const;
     void disable_polling() const;
+
+    float rj_x() const;
+    float rj_y() const;
+    float lj_x() const;
+    float lj_y() const;
+    float rt() const;
+    float lt() const;
+    bool rj_d() const;
+    bool lj_d() const;
+    bool rb() const;
+    bool lb() const;
+    DPad dpad() const;
+    bool s() const;
+    bool m() const;
+    bool h() const;
+    bool a() const;
+    bool b() const;
+    bool x() const;
+    bool y() const;
 
     friend void detect_controllers();
     friend Controller get_controller(std::size_t i);

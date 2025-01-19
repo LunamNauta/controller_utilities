@@ -12,6 +12,13 @@
 
 #include <ncurses.h>
 
+/*
+ * NOTE: The joystick values shown here are not normalized
+ * They are the raw values from the controller, scaled to between -1.0f and 1.0f
+ * You cannot assume that the magnitude of the direction vector is equal to 1.0f,
+ * Only that each component's magnitude is at most 1.0f
+*/
+
 int main(){
     // Detect all currently connected controllers
     Input::Xbox::detect_controllers();
