@@ -25,7 +25,7 @@ int main(){
     if (!Input::Xbox::detected_controllers_count()) throw std::runtime_error("Error: Failed to find Xbox controller");
     
     Input::Xbox::Controller controller = Input::Xbox::get_controller(); // Get the first controller that was found
-    controller.set_deadzone(4000); // Set the deadzone. Joystick values less than this will be read as 0. The max value is SHRT_MAX and the min is SHRT_MIN
+    controller.set_deadzone(0.25f); // Set the deadzone (as a percent). Joystick values less than this will be read as 0.
     controller.enable_polling();   // Enable polling of this device. Without this, the controller state will not update
 
     // On all the Xbox controllers tested, joystick max has been SHRT_MAX and the SHRT_MIN (joystick position is defined by 'short's)

@@ -62,7 +62,7 @@ public:
     Controller();
 
     Controller_State get_state() const;
-    void set_deadzone(short di);
+    void set_deadzone(float pct);
     short get_deadzone() const;
 
     void enable_polling();

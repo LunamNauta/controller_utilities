@@ -18,6 +18,10 @@
 namespace Input{
 namespace Xbox{
 
+const float JOYSTICK_NEG_MAX = -(float)std::numeric_limits<short>::min();
+const float JOYSTICK_POS_MAX = (float)std::numeric_limits<short>::max();
+const float TRIGGER_MAX = 1023.0f;
+
 std::unordered_set<std::shared_ptr<Controller_Handle>> known_controllers;
 std::unordered_map<std::shared_ptr<Controller_Handle>, pollfd> auto_updated_controllers;
 bool setup_cleanup = false;
@@ -119,9 +123,9 @@ Controller_State Controller::get_state() const{
     handle->guard.unlock();
     return st;
 }
-void Controller::set_deadzone(short di){
+void Controller::set_deadzone(float pct){
     handle->guard.lock();
-    handle->deadzone = di;
+    handle->deadzone = JOYSTICK_POS_MAX * pct;
     handle->guard.unlock();
 }
 short Controller::get_deadzone() const{
@@ -156,9 +160,6 @@ void Controller::disable_polling() const{
     }
 }
 
-const float JOYSTICK_NEG_MAX = -(float)std::numeric_limits<short>::min();
-const float JOYSTICK_POS_MAX = (float)std::numeric_limits<short>::max();
-const float TRIGGER_MAX = 1023.0f;
 float Controller::rj_x() const{
     handle->guard.lock();
     float val = 0.0f;
