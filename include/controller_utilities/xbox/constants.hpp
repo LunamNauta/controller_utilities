@@ -54,7 +54,7 @@ static const std::unordered_map<std::size_t, std::tuple<ConsoleType, std::string
     //{2834, "Xbox Series X/S Controller (model 1914)"},
     
     //Xbox One
-    {746, {ConsoleType::XBOX_ONE, "Xbox One S Controllervoid set_auto_update(Controller controller);"}},
+    {746, {ConsoleType::XBOX_ONE, "Xbox One S Controller"}},
     {739, {ConsoleType::XBOX_ONE, "Xbox One Elite Controller"}},
     {733, {ConsoleType::XBOX_ONE, "Xbox One Controller (Firmware 2015)"}},
     {721, {ConsoleType::XBOX_ONE, "Xbox One Controller"}},
