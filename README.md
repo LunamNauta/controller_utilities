@@ -31,3 +31,11 @@ at this time, and therefore can't test anything else.
     - [ ] Playstation
 - [ ] Support for controllers that aren't Xbox one
 - [ ] Gernalization that will allow the creation of maps between any controller and the internal ABI
+
+### Build
+```
+mkdir build
+cd build
+cmake ../
+make
+```
