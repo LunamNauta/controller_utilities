@@ -9,26 +9,19 @@ at this time, and therefore can't test anything else.
 
 ### Things to do
 - [x] Detection of wired controllers
-    - [x] Xbox
-    - [ ] Playstation
+    - [x] Xbox (Some)
 - [ ] Detection of bluetooth controllers
-    - [ ] Xbox
-    - [ ] Playstation
+    - [x] Xbox (Some)
 - [ ] Detect if a controller is disconnected
     - [ ] Xbox
-    - [ ] Playstation
 - [x] Detect all joystick, trigger, button events, etc
-    - [x] Xbox
-    - [ ] Playstation
+    - [x] Xbox (Some)
 - [x] Enable/disable automatic polling of controller event file
-    - [x] Xbox
-    - [ ] Playstation
+    - [x] Xbox (All)
 - [ ] Lock file descriptor mutex before disable polling on said descriptor
     - [ ] Xbox
-    - [ ] Playstation
 - [x] Controller rumble (and modifying the strength of that rumble)
-    - [x] Xbox
-    - [ ] Playstation
+    - [x] Xbox (All)
 - [ ] Support for controllers that aren't Xbox one
 - [ ] Gernalization that will allow the creation of maps between any controller and the internal ABI
 

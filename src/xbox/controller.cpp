@@ -3,6 +3,7 @@
 #include "controller_utilities/utilities.hpp"
 
 #include <unordered_set>
+#include <filesystem>
 #include <algorithm>
 #include <stdexcept>
 #include <iostream>
@@ -33,7 +34,7 @@ bool kill_polling_thread = false;
 void update_from_input_event(std::shared_ptr<Controller_Handle> controller, const input_event& event){
     controller->guard.lock();
     if (event.type == EV_KEY || event.type == EV_ABS){
-        for (std::size_t a = 0; a < EVENT_CODES[0][(std::size_t)controller->console_type].size(); a++){
+        for (std::size_t a = 0; a < EVENT_CODES[(std::size_t)controller->controller_type][(std::size_t)controller->console_type].size(); a++){
             if (event.code == EVENT_CODES[(std::size_t)controller->controller_type][(std::size_t)controller->console_type][a]){
                 switch (static_cast<ControllerInput>(a)){
                     case ControllerInput::RIGHT_JOYSTICK:{controller->state.rj_d = event.value; break;}
@@ -160,35 +161,45 @@ void Controller::disable_polling() const{
     }
 }
 
+float scale_joystick(float val, float deadzone, ControllerType ct){
+    if (ct == ControllerType::BLUETOOTH) val -= std::numeric_limits<short>::max() - 3276;
+    if (std::abs(val) < deadzone) return 0.0f;
+    val = (val < 0.0f ? -1.0f : 1.0f) * (std::abs(val) - deadzone);
+    if (ct == ControllerType::BLUETOOTH){
+        if (val >= 0.0f) val /= (JOYSTICK_POS_MAX - deadzone - deadzone/2);
+        else val /= (JOYSTICK_NEG_MAX - deadzone - deadzone/2);
+    }
+    else{
+        if (val >= 0.0f) val /= (JOYSTICK_POS_MAX - deadzone);
+        else val /= (JOYSTICK_NEG_MAX - deadzone);
+    }
+    return std::min(std::max(-1.0f, val), 1.0f);
+}
 float Controller::rj_x() const{
     float val = 0.0f;
     handle->guard.lock();
-    if (handle->state.rj_x >= 0) val = (float)handle->state.rj_x / (JOYSTICK_POS_MAX - handle->deadzone);
-    else val = (float)handle->state.rj_x / (JOYSTICK_NEG_MAX - handle->deadzone);
+    val = scale_joystick(handle->state.rj_x, handle->deadzone, handle->controller_type);
     handle->guard.unlock();
     return val;
 }
 float Controller::rj_y() const{
     float val = 0.0f;
     handle->guard.lock();
-    if (handle->state.rj_y >= 0) val = (float)handle->state.rj_y / (JOYSTICK_POS_MAX - handle->deadzone);
-    else val = (float)handle->state.rj_y / (JOYSTICK_NEG_MAX - handle->deadzone);
+    val = scale_joystick(handle->state.rj_y, handle->deadzone, handle->controller_type);
     handle->guard.unlock();
     return val;
 }
 float Controller::lj_x() const{
     float val = 0.0f;
     handle->guard.lock();
-    if (handle->state.lj_x >= 0) val = (float)handle->state.lj_x / (JOYSTICK_POS_MAX - handle->deadzone);
-    else val = (float)handle->state.lj_x / (JOYSTICK_NEG_MAX - handle->deadzone);
+    val = scale_joystick(handle->state.lj_x, handle->deadzone, handle->controller_type);
     handle->guard.unlock();
     return val;
 }
 float Controller::lj_y() const{
     float val = 0.0f;
     handle->guard.lock();
-    if (handle->state.lj_y >= 0) val = (float)handle->state.lj_y / (JOYSTICK_POS_MAX - handle->deadzone);
-    else val = (float)handle->state.lj_y / (JOYSTICK_NEG_MAX - handle->deadzone);
+    val = scale_joystick(handle->state.lj_y, handle->deadzone, handle->controller_type);
     handle->guard.unlock();
     return val;
 }
@@ -347,10 +358,20 @@ void detect_controllers(){
                 if (std::find_if(known_controllers.begin(), known_controllers.end(), [&device](const std::shared_ptr<Controller_Handle>& c){
                     return std::find(device.handlers.begin(), device.handlers.end(), c->handler) != device.handlers.end();
                 }) != known_controllers.end()) break;
+                std::size_t handler_index = input_devices.size();
+                for (std::size_t a = 0; a < device.handlers.size(); a++){
+                    if (!std::filesystem::exists("/dev/input/" + device.handlers[a])) continue;
+                    handler_index = a;
+                    break;
+                }
+                if (handler_index == input_devices.size()){
+                    std::cerr << "Warning: Found Xbox controller, but could not find a valid event file\n";
+                    continue;
+                }
                 std::shared_ptr<Controller_Handle> new_controller(new Controller_Handle);
-                new_controller->handler = device.handlers[0];
+                new_controller->handler = device.handlers[handler_index];
                 new_controller->console_type = std::get<0>(product_id.second);
-                new_controller->controller_type = ControllerType::WIRED; // TODO: Add detection of wireless controller
+                new_controller->controller_type = std::get<1>(product_id.second);
                 known_controllers.insert(new_controller);
                 break;
             }

@@ -13,12 +13,12 @@ namespace Xbox{
 // TODO: input_event actually returns a signed 32-bit integer for the value, not a short
 // Rewrite to reflect this? Xbox controller only uses signed 16-bit integer
 struct Controller_State{
-    short lj_x;    // Left joystick (X-Axis)
-    short lj_y;    // Left joystick (Y-Axis)
-    short rj_x;    // Right joystick (X-Axis)
-    short rj_y;    // Right joystick (Y-Axis)
-    short lt;      // Left trigger
-    short rt;      // Right trigger
+    int32_t lj_x;    // Left joystick (X-Axis)
+    int32_t lj_y;    // Left joystick (Y-Axis)
+    int32_t rj_x;    // Right joystick (X-Axis)
+    int32_t rj_y;    // Right joystick (Y-Axis)
+    int32_t lt;      // Left trigger
+    int32_t rt;      // Right trigger
     bool lj_d : 1; // Left joystick (Down)
     bool rj_d : 1; // Right joystick (Down)
     bool lb : 1;   // Left bumper
