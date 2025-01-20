@@ -161,32 +161,32 @@ void Controller::disable_polling() const{
 }
 
 float Controller::rj_x() const{
-    handle->guard.lock();
     float val = 0.0f;
+    handle->guard.lock();
     if (handle->state.rj_x >= 0) val = (float)handle->state.rj_x / (JOYSTICK_POS_MAX - handle->deadzone);
     else val = (float)handle->state.rj_x / (JOYSTICK_NEG_MAX - handle->deadzone);
     handle->guard.unlock();
     return val;
 }
 float Controller::rj_y() const{
-    handle->guard.lock();
     float val = 0.0f;
+    handle->guard.lock();
     if (handle->state.rj_y >= 0) val = (float)handle->state.rj_y / (JOYSTICK_POS_MAX - handle->deadzone);
     else val = (float)handle->state.rj_y / (JOYSTICK_NEG_MAX - handle->deadzone);
     handle->guard.unlock();
     return val;
 }
 float Controller::lj_x() const{
-    handle->guard.lock();
     float val = 0.0f;
+    handle->guard.lock();
     if (handle->state.lj_x >= 0) val = (float)handle->state.lj_x / (JOYSTICK_POS_MAX - handle->deadzone);
     else val = (float)handle->state.lj_x / (JOYSTICK_NEG_MAX - handle->deadzone);
     handle->guard.unlock();
     return val;
 }
 float Controller::lj_y() const{
-    handle->guard.lock();
     float val = 0.0f;
+    handle->guard.lock();
     if (handle->state.lj_y >= 0) val = (float)handle->state.lj_y / (JOYSTICK_POS_MAX - handle->deadzone);
     else val = (float)handle->state.lj_y / (JOYSTICK_NEG_MAX - handle->deadzone);
     handle->guard.unlock();
@@ -229,12 +229,12 @@ bool Controller::lb() const{
     return val;
 }
 DPad Controller::dpad() const{
-    handle->guard.lock();
     DPad val = DPad::NONE;
+    handle->guard.lock();
     if (handle->state.dr) val = DPad::RIGHT;
-    if (handle->state.dl) val = DPad::LEFT;
-    if (handle->state.dd) val = DPad::DOWN;
-    if (handle->state.du) val = DPad::UP;
+    else if (handle->state.dl) val = DPad::LEFT;
+    else if (handle->state.dd) val = DPad::DOWN;
+    else if (handle->state.du) val = DPad::UP;
     handle->guard.unlock();
     return val;
 }
@@ -246,7 +246,7 @@ bool Controller::s() const{
 }
 bool Controller::m() const{
     handle->guard.lock();
-    bool val =handle->state.m;
+    bool val = handle->state.m;
     handle->guard.unlock();
     return val;
 }
@@ -286,27 +286,36 @@ void Controller::set_rumble(float strength){
     auto it = auto_updated_controllers.find(handle);
     if (it == auto_updated_controllers.end()) return;
     strength = std::min(1.0f, std::abs(strength));
-    ff_effect effect = {
-        FF_RUMBLE,
-        -1, 0,
-        {0, 0},
-        {100, 0},
-        {}
-    };
-    handle->guard.lock();
+
     // Create rumble effect
+    ff_effect effect;
+    effect.type = FF_RUMBLE;
+    effect.id = -1;
+    effect.direction = 0;
+    effect.trigger = {0, 0};
+    effect.replay = {100, 0};
+    effect.u = {};
     effect.u.rumble.strong_magnitude = std::numeric_limits<short>::max() * strength; 
     effect.u.rumble.weak_magnitude = std::numeric_limits<short>::max() * strength;
-    if (handle->rumble_id != -1) ioctl(it->second.fd, EVIOCRMFF, handle->rumble_id);
-    if (ioctl(it->second.fd, EVIOCSFF, &effect) < 0) return;
-    handle->rumble_id = effect.id;
+
     // Set strength of effect. This might do nothing... It seems as though strong and weak magnitude are the way to do this, 
     // But the documentation for the kernel says this is way to do it. Maybe it works for bluetooth mode?
     input_event input;
     input.type = EV_FF;
     input.code = FF_GAIN;
     input.value = (float)0xFFFFUL * strength;
-    if (write(it->second.fd, &input, sizeof(input)) < 0) std::cerr << "Warning: Failed to set strength of rumble effect\n";
+
+    handle->guard.lock();
+    if (handle->rumble_id != -1) ioctl(it->second.fd, EVIOCRMFF, handle->rumble_id);
+    if (ioctl(it->second.fd, EVIOCSFF, &effect) < 0){
+        std::cerr << "Warning: Failed to set rumble effect\n";
+        return;
+    }
+    handle->rumble_id = effect.id;
+    if (write(it->second.fd, &input, sizeof(input)) < 0){
+        std::cerr << "Warning: Failed to set strength of rumble effect\n";
+        return;
+    }
     handle->guard.unlock();
 }
 
@@ -314,13 +323,17 @@ void Controller::rumble(int32_t count) const{
     auto it = auto_updated_controllers.find(handle);
     if (it == auto_updated_controllers.end()) return;
     handle->guard.lock();
-    if (handle->rumble_id == -1) std::cerr << "Warning: Controller does not support rumble\n";
-    input_event play_rumble = {
-        {},
-        EV_FF,
-        (uint16_t)handle->rumble_id,
-        count
-    };
+    if (handle->rumble_id == -1){
+        std::cerr << "Warning: Controller does not support rumble\n";
+        return;
+    }
+    
+    input_event play_rumble;
+    play_rumble.time = {};
+    play_rumble.type = EV_FF;
+    play_rumble.code = handle->rumble_id;
+    play_rumble.value = count;
+    
     write(it->second.fd, &play_rumble, sizeof(play_rumble));
     handle->guard.unlock();
 }

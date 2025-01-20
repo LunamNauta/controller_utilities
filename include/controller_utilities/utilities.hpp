@@ -6,6 +6,8 @@
 #include <vector>
 #include <string>
 
+namespace Input{
+
 struct input_device{
     input_id id;
     std::string name;
@@ -16,5 +18,7 @@ struct input_device{
 std::vector<std::string> split_string(const std::string& str, std::string delimiter);
 
 std::vector<input_device> get_input_devices();
+
+}
 
 #endif

@@ -3,6 +3,8 @@
 #include <stdexcept>
 #include <fstream>
 
+namespace Input{
+
 //https://stackoverflow.com/questions/14265581/parse-split-a-string-in-c-using-string-delimiter-standard-c
 std::vector<std::string> split_string(const std::string& str, std::string delimiter) {
     std::size_t pos_start = 0, pos_end;
@@ -51,4 +53,6 @@ std::vector<input_device> get_input_devices(){
         }
     }
     return devices;
+}
+
 }
